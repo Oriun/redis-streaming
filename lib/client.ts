@@ -37,11 +37,13 @@ export function createClient(
       options.dev && console.log("dealing with stream", id);
       //   console.log("response", firstResponse.toString().slice(0, 100));
 
-      if (firstResponse[0] === REDIS_ERROR) {
+      if (!firstRequest.rest?.byteLength &&  firstResponse[0] === REDIS_ERROR) {
+        options.dev && console.log('closing due to redis error')
         stream.error(firstResponse);
         requestQueue.shift();
         continue;
       }
+      try{
       const {
         data,
         rest: newRest,
@@ -54,6 +56,20 @@ export function createClient(
         requestQueue.shift();
         continue;
       }
+    }catch(e){
+      console.log("closing stream due to error")
+      console.error(e);
+      stream.error(e);
+      requestQueue.shift();
+      continue;
+    }
+    }
+    if(requestQueue.length === 0 && responseQueue.length === 0) {
+      options.dev && console.log("no more requests or responses")
+    } else if(requestQueue.length === 0) {
+      options.dev && console.log("no more requests")
+    } else if(responseQueue.length === 0) {
+      options.dev && console.log("no more responses")
     }
     loopRunning = false;
   }

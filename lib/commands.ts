@@ -23,6 +23,7 @@ export function withCommands({
   }
   return {
     ready,
+    send,
     close() {
       client.destroySoon();
     },
